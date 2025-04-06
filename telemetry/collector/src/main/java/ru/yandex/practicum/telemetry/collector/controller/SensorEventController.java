@@ -26,7 +26,7 @@ public class SensorEventController {
     private final Map<SensorEventType, SensorEventHandler> sensorEventHandlers;
 
     public SensorEventController(List<SensorEventHandler> sensorEventHandlers) {
-        this.sensorEventHandlers =sensorEventHandlers.stream()
+        this.sensorEventHandlers = sensorEventHandlers.stream()
                 .collect(Collectors.toMap(SensorEventHandler::getMessageType, Function.identity()));
     }
 
@@ -34,6 +34,8 @@ public class SensorEventController {
     public void collectSensorEvent(@Valid @RequestBody SensorEvent request) {
         if (sensorEventHandlers.containsKey(request.getType())) {
             sensorEventHandlers.get(request.getType()).handle(request);
+        } else {
+            throw new IllegalArgumentException("Немогу найти обработчик датчика");
         }
     }
 }
