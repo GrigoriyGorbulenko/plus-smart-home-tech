@@ -9,9 +9,7 @@ import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProduce
 
 @Component
 public class MotionSensorEventHandler extends BaseSensorEventHandler<MotionSensorAvro> {
-    public MotionSensorEventHandler(KafkaEventProducer producer) {
-        super(producer);
-    }
+    public MotionSensorEventHandler(KafkaEventProducer producer) {super(producer); }
 
     @Override
     protected MotionSensorAvro mapToAvro(SensorEvent event) {

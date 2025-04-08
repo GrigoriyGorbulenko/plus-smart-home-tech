@@ -9,9 +9,7 @@ import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProduce
 
 @Component
 public class TemperatureSensorEventHandler extends BaseSensorEventHandler<TemperatureSensorAvro> {
-    public TemperatureSensorEventHandler(KafkaEventProducer producer) {
-        super(producer);
-    }
+    public TemperatureSensorEventHandler(KafkaEventProducer producer) {super(producer); }
 
     @Override
     protected TemperatureSensorAvro mapToAvro(SensorEvent event) {

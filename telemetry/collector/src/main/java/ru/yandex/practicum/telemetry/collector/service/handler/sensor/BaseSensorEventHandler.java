@@ -2,18 +2,14 @@ package ru.yandex.practicum.telemetry.collector.service.handler.sensor;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEvent;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 
-@Service
+
 @RequiredArgsConstructor
 public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> implements SensorEventHandler {
-    protected final KafkaEventProducer producer;
-    @Value("${topic.telemetry-sensors}")
-    private String topic;
+    private final KafkaEventProducer producer;
 
     protected abstract T mapToAvro(SensorEvent event);
 
@@ -32,6 +28,7 @@ public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> imple
                 .setPayload(payload)
                 .build();
 
+        String topic = "telemetry.sensors.v1";
         producer.send(eventAvro,
                 event.getHubId(),
                 event.getTimestamp(),
