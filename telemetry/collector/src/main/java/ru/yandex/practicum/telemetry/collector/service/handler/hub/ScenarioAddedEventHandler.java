@@ -20,11 +20,11 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAdded
     @Override
     protected ScenarioAddedEventAvro mapToAvro(HubEvent event) {
 
-        ScenarioAddedEvent _event = (ScenarioAddedEvent) event;
+        ScenarioAddedEvent specialEvent = (ScenarioAddedEvent) event;
         return ScenarioAddedEventAvro.newBuilder()
-                .setName(_event.getName())
-                .setConditions(mapToConditionTypeAvro(_event.getConditions()))
-                .setActions(mapToDeviceActionAvro(_event.getActions()))
+                .setName(specialEvent.getName())
+                .setConditions(mapToConditionTypeAvro(specialEvent.getConditions()))
+                .setActions(mapToDeviceActionAvro(specialEvent.getActions()))
                 .build();
     }
 
