@@ -1,37 +1,41 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.sensor;
 
+import com.google.protobuf.Message;
 import lombok.RequiredArgsConstructor;
-import org.apache.avro.specific.SpecificRecordBase;
-import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEvent;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
-import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
+
+import java.time.Instant;
 
 
 @RequiredArgsConstructor
-public abstract class BaseSensorEventHandler<T extends SpecificRecordBase> implements SensorEventHandler {
+public abstract class BaseSensorEventHandler<T extends Message> implements SensorEventHandler {
     private final KafkaEventProducer producer;
 
-    protected abstract T mapToAvro(SensorEvent event);
+    protected abstract T mapToProto(SensorEventProto event);
 
     @Override
-    public void handle(SensorEvent event) {
-        if (!event.getType().equals(getMessageType())) {
-            throw new IllegalArgumentException("Неизвестный тип события: " + event.getType());
+    public void handle(SensorEventProto event) {
+        if (!event.getPayloadCase().equals(getMessageType())) {
+            throw new IllegalArgumentException("Неизвестный тип события: " + event.getPayloadCase());
         }
 
-        T payload = mapToAvro(event);
+        T payload = mapToProto(event);
 
-        SensorEventAvro eventAvro = SensorEventAvro.newBuilder()
+        SensorEventProto eventProto = SensorEventProto.newBuilder()
                 .setHubId(event.getHubId())
                 .setId(event.getId())
                 .setTimestamp(event.getTimestamp())
-                .setPayload(payload)
                 .build();
 
         String topic = "telemetry.sensors.v1";
-        producer.send(eventAvro,
+        producer.send(eventProto,
                 event.getHubId(),
-                event.getTimestamp(),
+                mapTimestampToInstant(event),
                 topic);
+    }
+
+    private Instant mapTimestampToInstant(SensorEventProto event) {
+        return Instant.ofEpochSecond(event.getTimestamp().getSeconds(), event.getTimestamp().getNanos());
     }
 }
