@@ -1,17 +1,18 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.hub;
 
-import com.google.protobuf.Message;
 import lombok.RequiredArgsConstructor;
+import org.apache.avro.specific.SpecificRecordBase;
 import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 import java.time.Instant;
 
 @RequiredArgsConstructor
-public abstract class BaseHubEventHandler<T extends Message> implements HubEventHandler {
+public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implements HubEventHandler {
     private final KafkaEventProducer producer;
 
-    protected abstract T mapToProto(HubEventProto event);
+    protected abstract T mapToAvro(HubEventProto event);
 
     @Override
     public void handle(HubEventProto event) {
@@ -19,16 +20,16 @@ public abstract class BaseHubEventHandler<T extends Message> implements HubEvent
             throw new IllegalArgumentException("Неизвестный тип события: " + event.getPayloadCase());
         }
 
-        T payload = mapToProto(event);
+        T payload = mapToAvro(event);
 
-        HubEventProto eventProto = HubEventProto.newBuilder()
+        HubEventAvro eventAvro = HubEventAvro.newBuilder()
                 .setHubId(event.getHubId())
-                .setTimestamp(event.getTimestamp())
-                .se
+                .setTimestamp(mapTimestampToInstant(event))
+                .setPayload(event)
                 .build();
 
         String topic = "telemetry.hubs.v1";
-        producer.send(eventProto,
+        producer.send(eventAvro,
                 event.getHubId(),
                 mapTimestampToInstant(event),
                 topic);
