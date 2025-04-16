@@ -10,14 +10,14 @@ import ru.yandex.practicum.telemetry.collector.model.sensor.SwitchSensor;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 @Component
-public class SwitchSensorEventHandler extends BaseSensorEventHandler<SwitchSensorProto> {
+public class SwitchSensorEventHandler extends BaseSensorEventHandler<SwitchSensorAvro> {
     public SwitchSensorEventHandler(KafkaEventProducer producer) {super(producer); }
 
     @Override
-    protected SwitchSensorProto mapToProto(SensorEventProto event) {
+    protected SwitchSensorAvro mapToAvro(SensorEventProto event) {
         SwitchSensorProto specialEvent = event.getSwitchSensorEvent();
 
-        return SwitchSensorProto.newBuilder()
+        return SwitchSensorAvro.newBuilder()
                 .setState(specialEvent.getState())
                 .build();
     }

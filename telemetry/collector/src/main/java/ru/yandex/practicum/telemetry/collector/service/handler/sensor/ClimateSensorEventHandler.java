@@ -3,17 +3,18 @@ package ru.yandex.practicum.telemetry.collector.service.handler.sensor;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.grpc.telemetry.event.ClimateSensorProto;
 import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
+import ru.yandex.practicum.kafka.telemetry.event.ClimateSensorAvro;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 @Component
-public class ClimateSensorEventHandler extends BaseSensorEventHandler<ClimateSensorProto> {
+public class ClimateSensorEventHandler extends BaseSensorEventHandler<ClimateSensorAvro> {
     public ClimateSensorEventHandler(KafkaEventProducer producer) {super(producer); }
 
     @Override
-    protected ClimateSensorProto mapToProto(SensorEventProto event) {
+    protected ClimateSensorAvro mapToAvro(SensorEventProto event) {
         ClimateSensorProto specialEvent = event.getClimateSensorEvent();
 
-        return ClimateSensorProto.newBuilder()
+        return ClimateSensorAvro.newBuilder()
                 .setTemperatureC(specialEvent.getTemperatureC())
                 .setHumidity(specialEvent.getHumidity())
                 .setCo2Level(specialEvent.getCo2Level())

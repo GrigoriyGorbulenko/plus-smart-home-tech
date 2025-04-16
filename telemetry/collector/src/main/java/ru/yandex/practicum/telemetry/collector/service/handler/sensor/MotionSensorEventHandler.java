@@ -10,14 +10,14 @@ import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEventType;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 @Component
-public class MotionSensorEventHandler extends BaseSensorEventHandler<MotionSensorProto> {
+public class MotionSensorEventHandler extends BaseSensorEventHandler<MotionSensorAvro> {
     public MotionSensorEventHandler(KafkaEventProducer producer) {super(producer); }
 
     @Override
-    protected MotionSensorProto mapToProto(SensorEventProto event) {
+    protected MotionSensorAvro mapToAvro(SensorEventProto event) {
         MotionSensorProto specialEvent = event.getMotionSensorEvent();
 
-        return MotionSensorProto.newBuilder()
+        return MotionSensorAvro.newBuilder()
                 .setLinkQuality(specialEvent.getLinkQuality())
                 .setMotion(specialEvent.getMotion())
                 .setVoltage(specialEvent.getVoltage())
