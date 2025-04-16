@@ -11,13 +11,12 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @ToString(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TemperatureSensorEvent extends SensorEvent {
+public class SwitchSensor extends Sensor {
     @NotNull
-    Integer temperatureC;
-    @NotNull
-    Integer temperatureF;
+    Boolean state;
+
     @Override
     public SensorEventType getType() {
-        return SensorEventType.TEMPERATURE_SENSOR_EVENT;
+        return SensorEventType.SWITCH_SENSOR_EVENT;
     }
 }

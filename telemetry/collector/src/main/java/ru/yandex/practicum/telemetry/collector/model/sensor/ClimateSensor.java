@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @ToString(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ClimateSensorEvent extends SensorEvent {
+public class ClimateSensor extends Sensor {
     @NotNull
     Integer temperatureC;
     @NotNull

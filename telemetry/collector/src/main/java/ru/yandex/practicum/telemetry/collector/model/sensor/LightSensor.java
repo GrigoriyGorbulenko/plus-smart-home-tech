@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @ToString(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class LightSensorEvent extends SensorEvent {
+public class LightSensor extends Sensor {
     @NotNull
     Integer linkQuality;
     @NotNull
