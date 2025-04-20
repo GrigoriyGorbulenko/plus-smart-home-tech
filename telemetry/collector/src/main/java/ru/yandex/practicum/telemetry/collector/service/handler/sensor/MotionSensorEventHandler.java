@@ -4,9 +4,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.grpc.telemetry.event.MotionSensorProto;
 import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.MotionSensorAvro;
-import ru.yandex.practicum.telemetry.collector.model.sensor.MotionSensor;
-import ru.yandex.practicum.telemetry.collector.model.sensor.Sensor;
-import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEventType;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 @Component
