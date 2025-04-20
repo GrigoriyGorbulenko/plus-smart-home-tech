@@ -14,9 +14,9 @@ import java.time.Instant;
 public class KafkaEventProducer implements AutoCloseable {
     protected final Producer<String, SpecificRecordBase> producer;
 
-    public void send(SpecificRecordBase specificRecordBase, String hubId, Instant timestamp, String topic) {
+    public void send(SpecificRecordBase message, String hubId, Instant timestamp, String topic) {
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(topic, null,
-                timestamp.toEpochMilli(), hubId, specificRecordBase);
+                timestamp.toEpochMilli(), hubId, message);
 
         producer.send(record);
         producer.flush();
