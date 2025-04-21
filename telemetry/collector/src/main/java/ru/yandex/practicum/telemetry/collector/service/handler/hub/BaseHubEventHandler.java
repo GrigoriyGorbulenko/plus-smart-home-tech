@@ -1,35 +1,34 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.hub;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.avro.specific.SpecificRecordBase;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
-import ru.yandex.practicum.telemetry.collector.model.hub.HubEvent;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
+import java.time.Instant;
+
 @RequiredArgsConstructor
-public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implements HubEventHandler {
+public abstract class BaseHubEventHandler implements HubEventHandler {
     private final KafkaEventProducer producer;
 
-    protected abstract T mapToAvro(HubEvent event);
+    protected abstract HubEventAvro mapToAvro(HubEventProto event);
 
     @Override
-    public void handle(HubEvent event) {
-        if (!event.getType().equals(getMessageType())) {
-            throw new IllegalArgumentException("Неизвестный тип события: " + event.getType());
+    public void handle(HubEventProto event) {
+        if (!event.getPayloadCase().equals(getMessageType())) {
+            throw new IllegalArgumentException("Неизвестный тип события: " + event.getPayloadCase());
         }
 
-        T payload = mapToAvro(event);
-
-        HubEventAvro eventAvro = HubEventAvro.newBuilder()
-                .setHubId(event.getHubId())
-                .setTimestamp(event.getTimestamp())
-                .setPayload(payload)
-                .build();
+        HubEventAvro hubEventAvro = mapToAvro(event);
 
         String topic = "telemetry.hubs.v1";
-        producer.send(eventAvro,
+        producer.send(hubEventAvro,
                 event.getHubId(),
-                event.getTimestamp(),
+                mapTimestampToInstant(event),
                 topic);
+    }
+
+    Instant mapTimestampToInstant(HubEventProto event) {
+        return Instant.ofEpochSecond(event.getTimestamp().getSeconds(), event.getTimestamp().getNanos());
     }
 }
