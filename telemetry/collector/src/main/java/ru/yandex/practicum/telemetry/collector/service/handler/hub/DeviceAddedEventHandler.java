@@ -6,23 +6,25 @@ import ru.yandex.practicum.grpc.telemetry.event.DeviceTypeProto;
 import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceAddedEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.DeviceTypeAvro;
+import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 @Component
-public class DeviceAddedEventHandler extends BaseHubEventHandler<DeviceAddedEventAvro> {
+public class DeviceAddedEventHandler extends BaseHubEventHandler {
     public DeviceAddedEventHandler(KafkaEventProducer producer) {
         super(producer);
     }
 
     @Override
-    protected DeviceAddedEventAvro mapToAvro(HubEventProto event) {
+    protected HubEventAvro mapToAvro(HubEventProto event) {
         DeviceAddedEventProto specialEvent = event.getDeviceAdded();
 
-        return DeviceAddedEventAvro.newBuilder()
-                .setId(specialEvent.getId())
-                .setType(mapToDeviceTypeAvro(specialEvent.getType()))
+        return  HubEventAvro.newBuilder()
+                .setHubId(event.getHubId())
+                .setTimestamp(mapTimestampToInstant(event))
+                .setPayload(new DeviceAddedEventAvro(specialEvent.getId(),
+                        mapToDeviceTypeAvro(specialEvent.getType())))
                 .build();
-
     }
 
     @Override

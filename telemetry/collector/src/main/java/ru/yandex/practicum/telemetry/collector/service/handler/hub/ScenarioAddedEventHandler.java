@@ -11,19 +11,21 @@ import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProduce
 import java.util.List;
 
 @Component
-public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAddedEventAvro> {
+public class ScenarioAddedEventHandler extends BaseHubEventHandler {
     public ScenarioAddedEventHandler(KafkaEventProducer producer) {
         super(producer);
     }
 
     @Override
-    protected ScenarioAddedEventAvro mapToAvro(HubEventProto event) {
+    protected HubEventAvro mapToAvro(HubEventProto event) {
 
         ScenarioAddedEventProto specialEvent = event.getScenarioAdded();
-        return ScenarioAddedEventAvro.newBuilder()
-                .setName(specialEvent.getName())
-                .setConditions(mapToConditionTypeAvro(specialEvent.getConditionList()))
-                .setActions(mapToDeviceActionAvro(specialEvent.getActionList()))
+        return HubEventAvro.newBuilder()
+                .setHubId(event.getHubId())
+                .setTimestamp(mapTimestampToInstant(event))
+                .setPayload(new ScenarioAddedEventAvro(specialEvent.getName(),
+                        mapToConditionTypeAvro(specialEvent.getConditionList()),
+                        mapToDeviceActionAvro(specialEvent.getActionList())))
                 .build();
     }
 
