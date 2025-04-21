@@ -18,14 +18,16 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler {
 
     @Override
     protected HubEventAvro mapToAvro(HubEventProto event) {
-
         ScenarioAddedEventProto specialEvent = event.getScenarioAdded();
+
         return HubEventAvro.newBuilder()
                 .setHubId(event.getHubId())
                 .setTimestamp(mapTimestampToInstant(event))
-                .setPayload(new ScenarioAddedEventAvro(specialEvent.getName(),
-                        mapToConditionTypeAvro(specialEvent.getConditionList()),
-                        mapToDeviceActionAvro(specialEvent.getActionList())))
+                .setPayload(ScenarioAddedEventAvro.newBuilder()
+                                .setName(specialEvent.getName())
+                                .setConditions(mapToConditionTypeAvro(specialEvent.getConditionList()))
+                        .setActions(mapToDeviceActionAvro(specialEvent.getActionList()))
+                        .build())
                 .build();
     }
 
@@ -36,7 +38,7 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler {
 
     private List<ScenarioConditionAvro> mapToConditionTypeAvro(List<ScenarioConditionProto> conditions) {
         return conditions.stream()
-                .map(condition -> ScenarioConditionAvro.newBuilder()
+                .map(condition-> ScenarioConditionAvro.newBuilder()
                         .setSensorId(condition.getSensorId())
                         .setType(
                                 switch (condition.getType()) {
@@ -46,19 +48,23 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler {
                                     case TEMPERATURE -> ConditionTypeAvro.TEMPERATURE;
                                     case CO2LEVEL -> ConditionTypeAvro.CO2LEVEL;
                                     case HUMIDITY -> ConditionTypeAvro.HUMIDITY;
-                                    default ->
-                                            throw new IllegalStateException("Unexpected value: " + condition.getType());
+                                    default -> throw new IllegalStateException("Unexpected value: " + condition.getType());
                                 })
                         .setOperation(
                                 switch (condition.getOperation()) {
                                     case EQUALS -> ConditionOperationAvro.EQUALS;
                                     case GREATER_THAN -> ConditionOperationAvro.GREATER_THAN;
                                     case LOWER_THAN -> ConditionOperationAvro.LOWER_THAN;
-                                    default ->
-                                            throw new IllegalStateException("Unexpected value: " + condition.getOperation());
+                                    default -> throw new IllegalStateException("Unexpected value: " + condition.getType());
                                 }
                         )
-                        .setValue(condition.getValueCase())
+                        .setValue(
+                                switch (condition.getValueCase()) {
+                                    case INT_VALUE -> condition.getIntValue();
+                                    case BOOL_VALUE -> condition.getBoolValue();
+                                    default -> throw new IllegalStateException("Unexpected value: " + condition.getType());
+                                }
+                        )
                         .build())
                 .toList();
     }
