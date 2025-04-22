@@ -22,4 +22,4 @@ protocol SensorsSnapshotProtocol {
             TemperatureSensorAvro
         } data;
     }
-} 
+}
