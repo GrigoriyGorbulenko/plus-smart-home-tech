@@ -2,53 +2,98 @@ package ru.yandex.practicum.starter;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
+import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
+import ru.yandex.practicum.service.AggregatorService;
+
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AggregationStarter {
+    private final Consumer<String, SpecificRecordBase> consumer;
+    private final AggregatorService aggregatorService;
+    private final Producer<String, SpecificRecordBase> producer;
+    private static final Duration CONSUME_ATTEMPT_TIMEOUT = Duration.ofMillis(1000);
+    private static final Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
+    @Value("${topic.telemetry-sensors}")
+    private String sensorsTopic;
+    @Value("${aggregator.topic.telemetry-snapshots}")
+    private String snapshotsTopic;
 
-    // ... объявление полей и конструктора ...
-
-    /**
-     * Метод для начала процесса агрегации данных.
-     * Подписывается на топики для получения событий от датчиков,
-     * формирует снимок их состояния и записывает в кафку.
-     */
     public void start() {
         try {
+            consumer.subscribe(List.of(sensorsTopic));
 
-            // ... подготовка к обработке данных ...
-            // ... например, подписка на топик ...
+            Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
-            // Цикл обработки событий
             while (true) {
-                // ... реализация цикла опроса ...
-                // ... и обработка полученных данных ...
+                ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(CONSUME_ATTEMPT_TIMEOUT);
+                int count = 0;
+                for (ConsumerRecord<String, SpecificRecordBase> record : records) {
+
+                    SensorEventAvro event = (SensorEventAvro) record.value();
+                    Optional<SensorsSnapshotAvro> optSnapshot = aggregatorService.updateState(event);
+
+                    if (optSnapshot.isPresent()) {
+                        SensorsSnapshotAvro snapshot = optSnapshot.get();
+                        send(snapshot);
+                    }
+                    manageOffsets(record, count, consumer);
+                    count++;
+                }
+                consumer.commitAsync();
             }
 
         } catch (WakeupException ignored) {
-            // игнорируем - закрываем консьюмер и продюсер в блоке finally
         } catch (Exception e) {
             log.error("Ошибка во время обработки событий от датчиков", e);
         } finally {
-
             try {
-                // Перед тем, как закрыть продюсер и консьюмер, нужно убедится,
-                // что все сообщения, лежащие в буффере, отправлены и
-                // все оффсеты обработанных сообщений зафиксированы
-
-                // здесь нужно вызвать метод продюсера для сброса данных в буффере
-                // здесь нужно вызвать метод консьюмера для фиксиции смещений
-
+                consumer.commitSync(currentOffsets);
+                producer.flush();
             } finally {
                 log.info("Закрываем консьюмер");
                 consumer.close();
                 log.info("Закрываем продюсер");
                 producer.close();
             }
+        }
+    }
+
+    private void send(SensorsSnapshotAvro snapshot) {
+        ProducerRecord<String, SpecificRecordBase> producerRecord =
+                new ProducerRecord<>(snapshotsTopic,
+                        null, snapshot.getTimestamp().toEpochMilli(), snapshot.getHubId(), snapshot);
+        producer.send(producerRecord);
+    }
+
+    private void manageOffsets(ConsumerRecord<String, SpecificRecordBase> record, int count, Consumer<String, SpecificRecordBase> consumer) {
+        currentOffsets.put(
+                new TopicPartition(record.topic(), record.partition()),
+                new OffsetAndMetadata(record.offset() + 1)
+        );
+
+        if (count % 10 == 0) {
+            consumer.commitAsync(currentOffsets, (offsets, exception) -> {
+                if (exception != null) {
+                    log.warn("Ошибка во время фиксации оффсетов: {}", offsets, exception);
+                }
+            });
         }
     }
 }
