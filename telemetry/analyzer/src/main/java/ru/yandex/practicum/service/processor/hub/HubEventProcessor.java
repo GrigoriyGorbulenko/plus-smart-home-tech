@@ -40,14 +40,13 @@ public class HubEventProcessor implements Runnable {
             consumer.subscribe(List.of(hubEventTopic));
             Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
             while (true) {
-                ConsumerRecords<String, HubEventAvro> records =
-                        consumer.poll(CONSUME_ATTEMPT_TIMEOUT);
+                ConsumerRecords<String, HubEventAvro> records = consumer.poll(CONSUME_ATTEMPT_TIMEOUT);
                 int count = 0;
                 for (ConsumerRecord<String, HubEventAvro> record : records) {
                     try {
                         hubEventHandler.handle(record.value());
                     } catch (DuplicateException | NotFoundException e) {
-                        log.info("При обработке получено исключение: {} {} ", e.getClass().getSimpleName(), e.getMessage());
+                        log.error("Ошибка во время обработки событий от датчиков", e);
                     }
                     manageOffsets(record, count, consumer);
                     count++;

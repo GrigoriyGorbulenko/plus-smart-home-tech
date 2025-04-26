@@ -1,13 +1,21 @@
 package ru.yandex.practicum.service.handler.hub;
 
-import ru.yandex.practicum.exception.NotFoundException;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.*;
 
+@Component
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class HubEventHandlerImpl implements HubEventHandler {
-    DeviceAddedEventHandler deviceAddedEventHandler;
-    DeviceRemovedEventHandler deviceRemovedEventHandler;
-    ScenarioAddedEventHandler scenarioAddedEventHandler;
-    ScenarioRemovedEventHandler scenarioRemovedEventHandler;
+    final DeviceAddedEventHandler deviceAddedEventHandler;
+    final DeviceRemovedEventHandler deviceRemovedEventHandler;
+    final ScenarioAddedEventHandler scenarioAddedEventHandler;
+    final ScenarioRemovedEventHandler scenarioRemovedEventHandler;
+
 
     @Override
     public void handle(HubEventAvro hubEvent) {
@@ -18,7 +26,7 @@ public class HubEventHandlerImpl implements HubEventHandler {
             case DeviceRemovedEventAvro eventAvro -> deviceRemovedEventHandler.deleteDevice(eventAvro, hubId);
             case ScenarioAddedEventAvro eventAvro -> scenarioAddedEventHandler.addScenario(eventAvro, hubId);
             case ScenarioRemovedEventAvro eventAvro -> scenarioRemovedEventHandler.deleteScenario(eventAvro, hubId);
-            default -> throw new NotFoundException("Обработчик не найден");
+            default -> throw new IllegalStateException("Unexpected value: " + payload);
         }
     }
 }

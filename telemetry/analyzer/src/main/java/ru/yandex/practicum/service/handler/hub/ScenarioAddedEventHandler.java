@@ -1,8 +1,11 @@
 package ru.yandex.practicum.service.handler.hub;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.exception.DuplicateException;
 import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.kafka.telemetry.event.*;
@@ -25,24 +28,25 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ScenarioAddedEventHandler {
-    private final ScenarioRepository scenarioRepository;
-    private final ConditionRepository conditionRepository;
-    private final ActionRepository actionRepository;
-    private final SensorRepository sensorRepository;
+    final ScenarioRepository scenarioRepository;
+    final ConditionRepository conditionRepository;
+    final ActionRepository actionRepository;
+    final SensorRepository sensorRepository;
 
+    @Transactional
     public void addScenario(ScenarioAddedEventAvro eventAvro, String hubId) {
-        String name = eventAvro.getName();
-        if (scenarioRepository.existsByHubIdAndName(hubId, name)) {
-            throw new DuplicateException("Сценарий с названием: " + name + " в хабе с id: "
+        if (scenarioRepository.existsByHubIdAndName(hubId, eventAvro.getName())) {
+            throw new DuplicateException("Сценарий с названием: " + eventAvro.getName() + " в хабе с id: "
                     + hubId + " уже есть");
         }
-        checkSensorIds(eventAvro, hubId);
+        checkSensorId(eventAvro, hubId);
         Map<String, Condition> conditions = eventAvro.getConditions().stream()
                 .collect(Collectors.toMap(ScenarioConditionAvro::getSensorId, condition -> Condition.builder()
                         .type(mapToConditionType(condition.getType()))
-                        .operation(mapToOperationType(condition.getOperation()))
-                        .value(extractValue(condition))
+                        .operation(mapToConditionOperationType(condition.getOperation()))
+                        .value(setValue(condition.getValue()))
                         .build()));
         Map<String, Action> actions = eventAvro.getActions().stream()
                 .collect(Collectors.toMap(DeviceActionAvro::getSensorId, action -> Action.builder()
@@ -54,7 +58,7 @@ public class ScenarioAddedEventHandler {
         conditionRepository.saveAll(conditions.values());
         scenarioRepository.save(Scenario.builder()
                 .hubId(hubId)
-                .name(name)
+                .name(eventAvro.getName())
                 .conditions(conditions)
                 .actions(actions).build());
     }
@@ -70,7 +74,7 @@ public class ScenarioAddedEventHandler {
         };
     }
 
-    private ConditionOperationType mapToOperationType(ConditionOperationAvro typeAvro) {
+    private ConditionOperationType mapToConditionOperationType(ConditionOperationAvro typeAvro) {
         return switch (typeAvro) {
             case EQUALS -> ConditionOperationType.EQUALS;
             case LOWER_THAN -> ConditionOperationType.LOWER_THAN;
@@ -87,31 +91,28 @@ public class ScenarioAddedEventHandler {
         };
     }
 
-    private Integer extractValue(ScenarioConditionAvro conditionAvro) {
-        Object valueObj = conditionAvro.getValue();
-        if (valueObj instanceof Integer) {
-            return (Integer) valueObj;
+    private Integer setValue(Object value) {
+        if (value instanceof Integer) {
+            return (Integer) value;
         }
-        return (Boolean) valueObj ? 1 : 0;
+        return (Boolean) value ? 1 : 0;
     }
 
-    private void checkSensorIds(ScenarioAddedEventAvro eventAvro, String hubId) {
-        Set<String> ids = eventAvro.getConditions().stream()
+    private void checkSensorId(ScenarioAddedEventAvro eventAvro, String hubId) {
+        Set<String> sensorConditionId = eventAvro.getConditions().stream()
                 .map(ScenarioConditionAvro::getSensorId).collect(Collectors.toSet());
-        if (ids.size() < eventAvro.getConditions().size()) {
-            throw new DuplicateException("Недопустимо указывать одновременно два условия для одного и того же датчика");
+        if (sensorConditionId.size() < eventAvro.getConditions().size()) {
+            throw new DuplicateException("Несоответствие условиям");
         }
-        if (sensorRepository.findByIdInAndHubId(ids, hubId).size() != ids.size()) {
-            throw new NotFoundException("id некоторых датчиков указанных в условии сценария " +
-                    " не найдены в рамках данного хаба");
+        if (sensorRepository.findByIdInAndHubId(sensorConditionId, hubId).size() != sensorConditionId.size()) {
+            throw new NotFoundException("id не найдены");
         }
-        ids = eventAvro.getActions().stream().map(DeviceActionAvro::getSensorId).collect(Collectors.toSet());
-        if (ids.size() < eventAvro.getActions().size()) {
-            throw new DuplicateException("Недопустимо указывать одновременно два действия для одного и того же устройства");
+        Set<String> sensorActionId = eventAvro.getActions().stream().map(DeviceActionAvro::getSensorId).collect(Collectors.toSet());
+        if (sensorActionId.size() < eventAvro.getActions().size()) {
+            throw new DuplicateException("Несоответствие условиям");
         }
-        if (sensorRepository.findByIdInAndHubId(ids, hubId).size() != ids.size()) {
-            throw new DuplicateException("id некоторых устройств указанных в действиях по сценарию " +
-                    "не найдены в рамках данного хаба");
+        if (sensorRepository.findByIdInAndHubId(sensorActionId, hubId).size() != sensorActionId.size()) {
+            throw new NotFoundException("id не найдены");
         }
     }
 }

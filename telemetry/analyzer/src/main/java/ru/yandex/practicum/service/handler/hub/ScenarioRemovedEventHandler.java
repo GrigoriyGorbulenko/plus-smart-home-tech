@@ -3,6 +3,7 @@ package ru.yandex.practicum.service.handler.hub;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.exception.NotFoundException;
 import ru.yandex.practicum.kafka.telemetry.event.ScenarioRemovedEventAvro;
 import ru.yandex.practicum.model.Action;
@@ -23,15 +24,15 @@ public class ScenarioRemovedEventHandler {
     private final ConditionRepository conditionRepository;
     private final ActionRepository actionRepository;
 
+    @Transactional
     public void deleteScenario(ScenarioRemovedEventAvro eventAvro, String hubId) {
-        String name = eventAvro.getName();
-        Scenario scenario = scenarioRepository.findByHubIdAndName(hubId, name)
-                .orElseThrow(() -> new NotFoundException("Сценарий c названием: " + name +
+        Scenario optScenario = scenarioRepository.findByHubIdAndName(hubId, eventAvro.getName())
+                .orElseThrow(() -> new NotFoundException("Сценарий c названием: " + eventAvro.getName() +
                         " не найден в хабе c id: " + hubId));
-        Set<Long> conditionIds = scenario.getConditions().values().stream().map(Condition::getId).collect(Collectors.toSet());
+        Set<Long> conditionIds = optScenario.getConditions().values().stream().map(Condition::getId).collect(Collectors.toSet());
         conditionRepository.deleteAllById(conditionIds);
-        Set<Long> actionIds = scenario.getActions().values().stream().map(Action::getId).collect(Collectors.toSet());
+        Set<Long> actionIds = optScenario.getActions().values().stream().map(Action::getId).collect(Collectors.toSet());
         actionRepository.deleteAllById(actionIds);
-        scenarioRepository.deleteById(scenario.getId());
+        scenarioRepository.deleteById(optScenario.getId());
     }
 }
