@@ -24,14 +24,18 @@ public class AggregatorService {
             return optSensorsSnapshotAvro;
         } else {
             SensorsSnapshotAvro snapshot = createSnapshot(event);
+
             snapshots.put(event.getHubId(), snapshot);
+
             return Optional.of(snapshot);
         }
     }
 
     private SensorsSnapshotAvro createSnapshot(SensorEventAvro event) {
         Map<String, SensorStateAvro> sensorStates = new HashMap<>();
+
         SensorStateAvro sensorState = createSensorState(event);
+
         sensorStates.put(event.getId(), sensorState);
 
         return SensorsSnapshotAvro.newBuilder()
@@ -63,4 +67,6 @@ public class AggregatorService {
                 .setData(event.getPayload())
                 .build();
     }
+
+
 }

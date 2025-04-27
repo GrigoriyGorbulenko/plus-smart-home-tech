@@ -1,4 +1,4 @@
-package ru.yandex.practicum.configuration;
+package ru.yandex.practicum.config;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -14,7 +14,7 @@ import java.util.Properties;
 
 @Configuration
 @RequiredArgsConstructor
-public class KafkaProducerConfig {
+public class KafkaProducerConfiguration {
     private final Environment environment;
 
     @Bean
