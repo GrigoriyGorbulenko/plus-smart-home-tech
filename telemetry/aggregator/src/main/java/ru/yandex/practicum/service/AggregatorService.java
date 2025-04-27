@@ -1,11 +1,11 @@
 package ru.yandex.practicum.service;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorStateAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorsSnapshotAvro;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -15,46 +15,39 @@ public class AggregatorService {
 
     Map<String, SensorsSnapshotAvro> snapshots = new HashMap<>();
 
-    public Optional<SensorsSnapshotAvro> updateState(SensorEventAvro event) {
+    public Optional<SensorsSnapshotAvro> updateState(ConsumerRecord<String, SensorEventAvro> record) {
 
-        if (snapshots.containsKey(event.getHubId())) {
-            SensorsSnapshotAvro oldSnapshot = snapshots.get(event.getHubId());
-            Optional<SensorsSnapshotAvro> optSensorsSnapshotAvro = updateSnapshot(oldSnapshot, event);
-            optSensorsSnapshotAvro.ifPresent(sensorsSnapshotAvro -> snapshots.put(event.getHubId(), sensorsSnapshotAvro));
-            return optSensorsSnapshotAvro;
-        } else {
-            SensorsSnapshotAvro snapshot = createSnapshot(event);
-            snapshots.put(event.getHubId(), snapshot);
-            return Optional.of(snapshot);
-        }
-    }
+        SensorsSnapshotAvro snapshot;
+        if (snapshots.containsKey(record.key())) {
+            snapshot = snapshots.get(record.key());
+            Map<String, SensorStateAvro> sensorsState = snapshot.getSensorsState();
+            SensorEventAvro event = record.value();
 
-    private SensorsSnapshotAvro createSnapshot(SensorEventAvro event) {
-        Map<String, SensorStateAvro> sensorStates = new HashMap<>();
-        SensorStateAvro sensorState = createSensorState(event);
-        sensorStates.put(event.getId(), sensorState);
-
-        return SensorsSnapshotAvro.newBuilder()
-                .setHubId(event.getHubId())
-                .setTimestamp(Instant.now())
-                .setSensorsState(sensorStates)
-                .build();
-    }
-
-    private Optional<SensorsSnapshotAvro> updateSnapshot(SensorsSnapshotAvro oldSnapshot, SensorEventAvro event) {
-
-        if (oldSnapshot.getSensorsState().containsKey(event.getId())) {
-            if (oldSnapshot.getSensorsState().get(event.getId()).getTimestamp().isAfter(event.getTimestamp()) ||
-                    oldSnapshot.getSensorsState().get(event.getId()).getData().equals(event.getPayload())) {
-                return Optional.empty();
+            if (sensorsState.containsKey(event.getId())) {
+                SensorStateAvro oldSensorState = sensorsState.get(event.getId());
+                if (oldSensorState.getTimestamp().isAfter(event.getTimestamp()) ||
+                        oldSensorState.getData().equals(event.getPayload())) {
+                    return Optional.empty();
+                }
             }
+            sensorsState.put(event.getId(), createSensorState(event));
+            snapshot.setTimestamp(event.getTimestamp());
+
+        } else {
+            SensorEventAvro event = record.value();
+            Map<String, SensorStateAvro> sensorsState = new HashMap<>();
+
+            sensorsState.put(event.getId(), createSensorState(event));
+
+            snapshot = SensorsSnapshotAvro.newBuilder()
+                    .setHubId(record.key())
+                    .setTimestamp(event.getTimestamp())
+                    .setSensorsState(sensorsState)
+                    .build();
+
+            snapshots.put(record.key(), snapshot);
         }
-        SensorStateAvro sensorState = createSensorState(event);
-
-        oldSnapshot.getSensorsState().put(event.getId(), sensorState);
-        oldSnapshot.setTimestamp(event.getTimestamp());
-
-        return Optional.of(oldSnapshot);
+        return Optional.of(snapshot);
     }
 
     private SensorStateAvro createSensorState(SensorEventAvro event) {
@@ -63,4 +56,5 @@ public class AggregatorService {
                 .setData(event.getPayload())
                 .build();
     }
+
 }

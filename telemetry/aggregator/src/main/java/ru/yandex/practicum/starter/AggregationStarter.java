@@ -19,13 +19,12 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AggregationStarter {
-    private final Consumer<String, SpecificRecordBase> consumer;
+    private final Consumer<String, SensorEventAvro> consumer;
     private final AggregatorService aggregatorService;
     private final Producer<String, SpecificRecordBase> producer;
     private static final Duration CONSUME_ATTEMPT_TIMEOUT = Duration.ofMillis(1000);
@@ -42,17 +41,10 @@ public class AggregationStarter {
             Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
 
             while (true) {
-                ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(CONSUME_ATTEMPT_TIMEOUT);
+                ConsumerRecords<String, SensorEventAvro> records = consumer.poll(CONSUME_ATTEMPT_TIMEOUT);
                 int count = 0;
-                for (ConsumerRecord<String, SpecificRecordBase> record : records) {
-
-                    SensorEventAvro event = (SensorEventAvro) record.value();
-                    Optional<SensorsSnapshotAvro> optSnapshot = aggregatorService.updateState(event);
-
-                    if (optSnapshot.isPresent()) {
-                        SensorsSnapshotAvro snapshot = optSnapshot.get();
-                        send(snapshot);
-                    }
+                for (ConsumerRecord<String, SensorEventAvro> record : records) {
+                    aggregatorService.updateState(record).ifPresent(this::send);
                     manageOffsets(record, count, consumer);
                     count++;
                 }
@@ -82,7 +74,7 @@ public class AggregationStarter {
         producer.send(producerRecord);
     }
 
-    private void manageOffsets(ConsumerRecord<String, SpecificRecordBase> record, int count, Consumer<String, SpecificRecordBase> consumer) {
+    private void manageOffsets(ConsumerRecord<String, SensorEventAvro> record, int count, Consumer<String, SensorEventAvro> consumer) {
         currentOffsets.put(
                 new TopicPartition(record.topic(), record.partition()),
                 new OffsetAndMetadata(record.offset() + 1)

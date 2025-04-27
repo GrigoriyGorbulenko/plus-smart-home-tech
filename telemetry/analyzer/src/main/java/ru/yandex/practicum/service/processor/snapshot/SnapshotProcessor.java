@@ -1,7 +1,6 @@
 package ru.yandex.practicum.service.processor.snapshot;
 
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
@@ -46,7 +45,6 @@ public class SnapshotProcessor implements Runnable {
         this.consumer = consumer;
         this.snapshotHandler = snapshotHandler;
     }
-
 
     @Override
     public void run() {

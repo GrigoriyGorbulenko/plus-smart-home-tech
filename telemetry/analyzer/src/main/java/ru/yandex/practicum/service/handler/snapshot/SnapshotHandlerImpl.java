@@ -33,6 +33,7 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
     @Transactional(readOnly = true)
     public List<DeviceActionRequest> handle(SensorsSnapshotAvro snapshot) {
         String hubId = snapshot.getHubId();
+        log.info("Передан снапшот: {}", snapshot);
         if (snapshots.containsKey(hubId)) {
             SensorsSnapshotAvro sensorsSnapshotAvro = snapshots.get(hubId);
             Instant oldSnapshotTimestamp = sensorsSnapshotAvro.getTimestamp();
@@ -44,6 +45,7 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
         snapshots.put(hubId, snapshot);
         List<DeviceActionRequest> actionRequests = new ArrayList<>();
         for (Scenario scenario : scenarioRepository.findByHubId(snapshot.getHubId())) {
+            log.info("Получили сценарий с названием: {}", scenario.getName());
             Map<String, Condition> conditions = scenario.getConditions();
             if (!snapshot.getSensorsState().keySet().containsAll(conditions.keySet())) {
                 log.debug("Неполные данные");
@@ -74,37 +76,41 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
             Condition condition = entry.getValue();
             Integer value = condition.getValue();
             ConditionOperationAvro conditionOperationType = condition.getOperation();
-            if (!switch (condition.getType()) {
+
+            switch (condition.getType()) {
                 case TEMPERATURE -> {
                     ClimateSensorAvro climateState = (ClimateSensorAvro) data;
-                    yield checkByOperationType(climateState.getTemperatureC(), value, conditionOperationType);
+                    checkByConditionOperationType(climateState.getTemperatureC(), value, conditionOperationType);
                 }
                 case LUMINOSITY -> {
                     LightSensorAvro lightSensorState = (LightSensorAvro) data;
-                    yield checkByOperationType(lightSensorState.getLuminosity(), value, conditionOperationType);
+                    checkByConditionOperationType(lightSensorState.getLuminosity(), value, conditionOperationType);
                 }
                 case HUMIDITY -> {
                     ClimateSensorAvro climateSensorState = (ClimateSensorAvro) data;
-                    yield checkByOperationType(climateSensorState.getHumidity(), value, conditionOperationType);
+                    checkByConditionOperationType(climateSensorState.getHumidity(), value, conditionOperationType);
                 }
                 case CO2LEVEL -> {
                     ClimateSensorAvro climateSensorState = (ClimateSensorAvro) data;
-                    yield checkByOperationType(climateSensorState.getCo2Level(), value, conditionOperationType);
+                    checkByConditionOperationType(climateSensorState.getCo2Level(), value, conditionOperationType);
                 }
                 case SWITCH -> {
                     SwitchSensorAvro switchSensorState = (SwitchSensorAvro) data;
-                    yield (switchSensorState.getState() ? 1 : 0) == value;
+                    return (switchSensorState.getState() ? 1 : 0) == value;
                 }
                 case MOTION -> {
                     MotionSensorAvro motionSensorState = (MotionSensorAvro) data;
-                    yield (motionSensorState.getMotion() ? 1 : 0) == value;
+                    return (motionSensorState.getMotion() ? 1 : 0) == value;
                 }
-            }) return false;
+                default -> {
+                    return false;
+                }
+            }
         }
         return true;
     }
 
-    private boolean checkByOperationType(int currentValue, int conditionValue, ConditionOperationAvro type) {
+    private boolean checkByConditionOperationType(int currentValue, int conditionValue, ConditionOperationAvro type) {
         return switch (type) {
             case EQUALS -> currentValue == conditionValue;
             case GREATER_THAN -> currentValue > conditionValue;
