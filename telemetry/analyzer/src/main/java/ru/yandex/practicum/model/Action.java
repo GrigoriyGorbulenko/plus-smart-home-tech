@@ -3,7 +3,7 @@ package ru.yandex.practicum.model;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.yandex.practicum.model.enums.ActionType;
+import ru.yandex.practicum.kafka.telemetry.event.ActionTypeAvro;
 
 
 @ToString
@@ -19,7 +19,7 @@ public class Action {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @Enumerated
-    ActionType type;
+    @Enumerated(EnumType.STRING)
+    ActionTypeAvro type;
     Integer value;
 }

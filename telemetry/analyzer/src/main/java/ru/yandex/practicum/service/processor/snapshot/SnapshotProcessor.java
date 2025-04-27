@@ -65,7 +65,6 @@ public class SnapshotProcessor implements Runnable {
                             log.error("Ошибка во время обработки событий от датчиков", e);
                         }
                     }
-
                     manageOffsets(record, count, consumer);
                     count++;
                 }

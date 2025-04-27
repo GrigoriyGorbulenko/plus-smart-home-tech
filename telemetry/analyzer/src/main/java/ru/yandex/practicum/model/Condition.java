@@ -3,8 +3,8 @@ package ru.yandex.practicum.model;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.yandex.practicum.model.enums.ConditionOperationType;
-import ru.yandex.practicum.model.enums.ConditionType;
+import ru.yandex.practicum.kafka.telemetry.event.ConditionOperationAvro;
+import ru.yandex.practicum.kafka.telemetry.event.ConditionTypeAvro;
 
 @ToString
 @Getter
@@ -19,9 +19,9 @@ public class Condition {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @Enumerated
-    ConditionType type;
-    @Enumerated
-    ConditionOperationType operation;
+    @Enumerated(EnumType.STRING)
+    ConditionTypeAvro type;
+    @Enumerated(EnumType.STRING)
+    ConditionOperationAvro operation;
     Integer value;
 }

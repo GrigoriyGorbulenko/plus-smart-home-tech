@@ -12,9 +12,6 @@ import ru.yandex.practicum.kafka.telemetry.event.*;
 import ru.yandex.practicum.model.Action;
 import ru.yandex.practicum.model.Condition;
 import ru.yandex.practicum.model.Scenario;
-import ru.yandex.practicum.model.enums.ActionType;
-import ru.yandex.practicum.model.enums.ConditionOperationType;
-import ru.yandex.practicum.model.enums.ConditionType;
 import ru.yandex.practicum.repository.ActionRepository;
 import ru.yandex.practicum.repository.ConditionRepository;
 import ru.yandex.practicum.repository.ScenarioRepository;
@@ -44,13 +41,13 @@ public class ScenarioAddedEventHandler {
         checkSensorId(eventAvro, hubId);
         Map<String, Condition> conditions = eventAvro.getConditions().stream()
                 .collect(Collectors.toMap(ScenarioConditionAvro::getSensorId, condition -> Condition.builder()
-                        .type(mapToConditionType(condition.getType()))
-                        .operation(mapToConditionOperationType(condition.getOperation()))
+                        .type(condition.getType())
+                        .operation(condition.getOperation())
                         .value(setValue(condition.getValue()))
                         .build()));
         Map<String, Action> actions = eventAvro.getActions().stream()
                 .collect(Collectors.toMap(DeviceActionAvro::getSensorId, action -> Action.builder()
-                        .type(mapToActionType(action.getType()))
+                        .type(action.getType())
                         .value(action.getValue())
                         .build()
                 ));
@@ -63,33 +60,6 @@ public class ScenarioAddedEventHandler {
                 .actions(actions).build());
     }
 
-    private ConditionType mapToConditionType(ConditionTypeAvro typeAvro) {
-        return switch (typeAvro) {
-            case MOTION -> ConditionType.MOTION;
-            case SWITCH -> ConditionType.SWITCH;
-            case CO2LEVEL -> ConditionType.CO2LEVEL;
-            case HUMIDITY -> ConditionType.HUMIDITY;
-            case LUMINOSITY -> ConditionType.LUMINOSITY;
-            case TEMPERATURE -> ConditionType.TEMPERATURE;
-        };
-    }
-
-    private ConditionOperationType mapToConditionOperationType(ConditionOperationAvro typeAvro) {
-        return switch (typeAvro) {
-            case EQUALS -> ConditionOperationType.EQUALS;
-            case LOWER_THAN -> ConditionOperationType.LOWER_THAN;
-            case GREATER_THAN -> ConditionOperationType.GREATER_THAN;
-        };
-    }
-
-    private ActionType mapToActionType(ActionTypeAvro typeAvro) {
-        return switch (typeAvro) {
-            case INVERSE -> ActionType.INVERSE;
-            case ACTIVATE -> ActionType.ACTIVATE;
-            case DEACTIVATE -> ActionType.DEACTIVATE;
-            case SET_VALUE -> ActionType.SET_VALUE;
-        };
-    }
 
     private Integer setValue(Object value) {
         if (value instanceof Integer) {

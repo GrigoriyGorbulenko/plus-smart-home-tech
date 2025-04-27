@@ -13,8 +13,6 @@ import ru.yandex.practicum.kafka.telemetry.event.*;
 import ru.yandex.practicum.model.Action;
 import ru.yandex.practicum.model.Condition;
 import ru.yandex.practicum.model.Scenario;
-import ru.yandex.practicum.model.enums.ActionType;
-import ru.yandex.practicum.model.enums.ConditionOperationType;
 import ru.yandex.practicum.repository.ScenarioRepository;
 
 import java.time.Instant;
@@ -75,7 +73,7 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
             Object data = snapshotAvro.getSensorsState().get(entry.getKey()).getData();
             Condition condition = entry.getValue();
             Integer value = condition.getValue();
-            ConditionOperationType conditionOperationType = condition.getOperation();
+            ConditionOperationAvro conditionOperationType = condition.getOperation();
             if (!switch (condition.getType()) {
                 case TEMPERATURE -> {
                     ClimateSensorAvro climateState = (ClimateSensorAvro) data;
@@ -106,7 +104,7 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
         return true;
     }
 
-    private boolean checkByOperationType(int currentValue, int conditionValue, ConditionOperationType type) {
+    private boolean checkByOperationType(int currentValue, int conditionValue, ConditionOperationAvro type) {
         return switch (type) {
             case EQUALS -> currentValue == conditionValue;
             case GREATER_THAN -> currentValue > conditionValue;
@@ -114,7 +112,7 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
         };
     }
 
-    private ActionTypeProto mapToActionTypeProto(ActionType actionType) {
+    private ActionTypeProto mapToActionTypeProto(ActionTypeAvro actionType) {
         return switch (actionType) {
             case ACTIVATE -> ActionTypeProto.ACTIVATE;
             case DEACTIVATE -> ActionTypeProto.DEACTIVATE;
