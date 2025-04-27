@@ -23,7 +23,7 @@ public class KafkaConsumerConfig {
         Properties config = new Properties();
         config.put(ConsumerConfig.CLIENT_ID_CONFIG, environment.getProperty("spring.kafka.consumer.hub-client-id"));
         config.put(ConsumerConfig.GROUP_ID_CONFIG, environment.getProperty("spring.kafka.consumer.hub-group-id"));
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.consumer.bootstrap-servers"));
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.bootstrap-servers"));
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 environment.getProperty("spring.kafka.consumer.key-deserializer"));
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
@@ -39,7 +39,7 @@ public class KafkaConsumerConfig {
         Properties config = new Properties();
         config.put(ConsumerConfig.CLIENT_ID_CONFIG, environment.getProperty("spring.kafka.consumer.snapshot-client-id"));
         config.put(ConsumerConfig.GROUP_ID_CONFIG, environment.getProperty("spring.kafka.consumer.snapshot-group-id"));
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.consumer.bootstrap-servers"));
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.bootstrap-servers"));
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 environment.getProperty("spring.kafka.consumer.key-deserializer"));
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,

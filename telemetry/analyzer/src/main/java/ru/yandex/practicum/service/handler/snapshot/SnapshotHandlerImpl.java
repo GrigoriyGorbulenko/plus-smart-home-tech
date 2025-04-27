@@ -78,12 +78,8 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
             ConditionOperationType conditionOperationType = condition.getOperation();
             if (!switch (condition.getType()) {
                 case TEMPERATURE -> {
-                    if (data instanceof TemperatureSensorAvro temperatureState) {
-                        yield checkByOperationType(temperatureState.getTemperatureC(), value, conditionOperationType);
-                    } else {
-                        ClimateSensorAvro climateState = (ClimateSensorAvro) data;
-                        yield checkByOperationType(climateState.getTemperatureC(), value, conditionOperationType);
-                    }
+                    ClimateSensorAvro climateState = (ClimateSensorAvro) data;
+                    yield checkByOperationType(climateState.getTemperatureC(), value, conditionOperationType);
                 }
                 case LUMINOSITY -> {
                     LightSensorAvro lightSensorState = (LightSensorAvro) data;
