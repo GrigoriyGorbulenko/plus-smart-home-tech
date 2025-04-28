@@ -77,35 +77,32 @@ public class SnapshotHandlerImpl implements SnapshotHandler {
             Integer value = condition.getValue();
             ConditionOperationAvro conditionOperationType = condition.getOperation();
 
-            switch (condition.getType()) {
+            if (!switch (condition.getType()) {
                 case TEMPERATURE -> {
                     ClimateSensorAvro climateState = (ClimateSensorAvro) data;
-                    checkByConditionOperationType(climateState.getTemperatureC(), value, conditionOperationType);
+                    yield checkByConditionOperationType(climateState.getTemperatureC(), value, conditionOperationType);
                 }
                 case LUMINOSITY -> {
                     LightSensorAvro lightSensorState = (LightSensorAvro) data;
-                    checkByConditionOperationType(lightSensorState.getLuminosity(), value, conditionOperationType);
+                    yield checkByConditionOperationType(lightSensorState.getLuminosity(), value, conditionOperationType);
                 }
                 case HUMIDITY -> {
                     ClimateSensorAvro climateSensorState = (ClimateSensorAvro) data;
-                    checkByConditionOperationType(climateSensorState.getHumidity(), value, conditionOperationType);
+                    yield checkByConditionOperationType(climateSensorState.getHumidity(), value, conditionOperationType);
                 }
                 case CO2LEVEL -> {
                     ClimateSensorAvro climateSensorState = (ClimateSensorAvro) data;
-                    checkByConditionOperationType(climateSensorState.getCo2Level(), value, conditionOperationType);
+                    yield checkByConditionOperationType(climateSensorState.getCo2Level(), value, conditionOperationType);
                 }
                 case SWITCH -> {
                     SwitchSensorAvro switchSensorState = (SwitchSensorAvro) data;
-                    return (switchSensorState.getState() ? 1 : 0) == value;
+                    yield (switchSensorState.getState() ? 1 : 0) == value;
                 }
                 case MOTION -> {
                     MotionSensorAvro motionSensorState = (MotionSensorAvro) data;
-                    return (motionSensorState.getMotion() ? 1 : 0) == value;
+                    yield (motionSensorState.getMotion() ? 1 : 0) == value;
                 }
-                default -> {
-                    return false;
-                }
-            }
+            }) return false;
         }
         return true;
     }
