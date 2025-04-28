@@ -1,29 +1,34 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.sensor;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.grpc.telemetry.event.MotionSensorProto;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.MotionSensorAvro;
-import ru.yandex.practicum.telemetry.collector.model.sensor.MotionSensorEvent;
-import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEvent;
-import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEventType;
+import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 @Component
-public class MotionSensorEventHandler extends BaseSensorEventHandler<MotionSensorAvro> {
+public class MotionSensorEventHandler extends BaseSensorEventHandler {
     public MotionSensorEventHandler(KafkaEventProducer producer) {super(producer); }
 
     @Override
-    protected MotionSensorAvro mapToAvro(SensorEvent event) {
-        MotionSensorEvent specialEvent = (MotionSensorEvent) event;
+    protected SensorEventAvro mapToAvro(SensorEventProto event) {
+        MotionSensorProto specialEvent = event.getMotionSensor();
 
-        return MotionSensorAvro.newBuilder()
-                .setLinkQuality(specialEvent.getLinkQuality())
-                .setMotion(specialEvent.getMotion())
-                .setVoltage(specialEvent.getVoltage())
+        return SensorEventAvro.newBuilder()
+                .setId(event.getId())
+                .setHubId(event.getHubId())
+                .setTimestamp(mapTimestampToInstant(event))
+                .setPayload(MotionSensorAvro.newBuilder()
+                        .setMotion(specialEvent.getMotion())
+                        .setLinkQuality(specialEvent.getLinkQuality())
+                        .setVoltage(specialEvent.getVoltage())
+                        .build())
                 .build();
     }
 
     @Override
-    public SensorEventType getMessageType() {
-        return SensorEventType.MOTION_SENSOR_EVENT;
+    public SensorEventProto.PayloadCase getMessageType() {
+        return SensorEventProto.PayloadCase.MOTION_SENSOR;
     }
 }

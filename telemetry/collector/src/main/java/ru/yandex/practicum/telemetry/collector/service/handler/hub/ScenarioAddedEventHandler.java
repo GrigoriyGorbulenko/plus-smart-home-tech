@@ -1,41 +1,44 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.hub;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.grpc.telemetry.event.DeviceActionProto;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.ScenarioAddedEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.ScenarioConditionProto;
 import ru.yandex.practicum.kafka.telemetry.event.*;
-import ru.yandex.practicum.telemetry.collector.model.hub.DeviceAction;
-import ru.yandex.practicum.telemetry.collector.model.hub.HubEvent;
-import ru.yandex.practicum.telemetry.collector.model.hub.ScenarioAddedEvent;
-import ru.yandex.practicum.telemetry.collector.model.hub.ScenarioCondition;
-import ru.yandex.practicum.telemetry.collector.model.hub.enums.HubEventType;
 import ru.yandex.practicum.telemetry.collector.service.handler.KafkaEventProducer;
 
 import java.util.List;
 
 @Component
-public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAddedEventAvro> {
+public class ScenarioAddedEventHandler extends BaseHubEventHandler {
     public ScenarioAddedEventHandler(KafkaEventProducer producer) {
         super(producer);
     }
 
     @Override
-    protected ScenarioAddedEventAvro mapToAvro(HubEvent event) {
+    protected HubEventAvro mapToAvro(HubEventProto event) {
+        ScenarioAddedEventProto specialEvent = event.getScenarioAdded();
 
-        ScenarioAddedEvent specialEvent = (ScenarioAddedEvent) event;
-        return ScenarioAddedEventAvro.newBuilder()
-                .setName(specialEvent.getName())
-                .setConditions(mapToConditionTypeAvro(specialEvent.getConditions()))
-                .setActions(mapToDeviceActionAvro(specialEvent.getActions()))
+        return HubEventAvro.newBuilder()
+                .setHubId(event.getHubId())
+                .setTimestamp(mapTimestampToInstant(event))
+                .setPayload(ScenarioAddedEventAvro.newBuilder()
+                                .setName(specialEvent.getName())
+                                .setConditions(mapToConditionTypeAvro(specialEvent.getConditionList()))
+                        .setActions(mapToDeviceActionAvro(specialEvent.getActionList()))
+                        .build())
                 .build();
     }
 
     @Override
-    public HubEventType getMessageType() {
-        return HubEventType.SCENARIO_ADDED;
+    public HubEventProto.PayloadCase getMessageType() {
+        return HubEventProto.PayloadCase.SCENARIO_ADDED;
     }
 
-    private List<ScenarioConditionAvro> mapToConditionTypeAvro(List<ScenarioCondition> conditions) {
+    private List<ScenarioConditionAvro> mapToConditionTypeAvro(List<ScenarioConditionProto> conditions) {
         return conditions.stream()
-                .map(condition -> ScenarioConditionAvro.newBuilder()
+                .map(condition-> ScenarioConditionAvro.newBuilder()
                         .setSensorId(condition.getSensorId())
                         .setType(
                                 switch (condition.getType()) {
@@ -45,20 +48,28 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAdded
                                     case TEMPERATURE -> ConditionTypeAvro.TEMPERATURE;
                                     case CO2LEVEL -> ConditionTypeAvro.CO2LEVEL;
                                     case HUMIDITY -> ConditionTypeAvro.HUMIDITY;
+                                    default -> throw new IllegalStateException("Unexpected value: " + condition.getType());
                                 })
                         .setOperation(
                                 switch (condition.getOperation()) {
                                     case EQUALS -> ConditionOperationAvro.EQUALS;
                                     case GREATER_THAN -> ConditionOperationAvro.GREATER_THAN;
                                     case LOWER_THAN -> ConditionOperationAvro.LOWER_THAN;
+                                    default -> throw new IllegalStateException("Unexpected value: " + condition.getType());
                                 }
                         )
-                        .setValue(condition.getValue())
+                        .setValue(
+                                switch (condition.getValueCase()) {
+                                    case INT_VALUE -> condition.getIntValue();
+                                    case BOOL_VALUE -> condition.getBoolValue();
+                                    default -> throw new IllegalStateException("Unexpected value: " + condition.getType());
+                                }
+                        )
                         .build())
                 .toList();
     }
 
-    private List<DeviceActionAvro> mapToDeviceActionAvro(List<DeviceAction> deviceActions) {
+    private List<DeviceActionAvro> mapToDeviceActionAvro(List<DeviceActionProto> deviceActions) {
         return deviceActions.stream()
                 .map(action -> DeviceActionAvro.newBuilder()
                         .setSensorId(action.getSensorId())
@@ -68,6 +79,7 @@ public class ScenarioAddedEventHandler extends BaseHubEventHandler<ScenarioAdded
                                     case DEACTIVATE -> ActionTypeAvro.DEACTIVATE;
                                     case INVERSE -> ActionTypeAvro.INVERSE;
                                     case SET_VALUE -> ActionTypeAvro.SET_VALUE;
+                                    default -> throw new IllegalStateException("Unexpected value: " + action.getType());
                                 }
                         )
                         .setValue(action.getValue())
