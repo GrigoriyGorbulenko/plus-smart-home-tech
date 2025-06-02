@@ -20,7 +20,7 @@ public class KafkaProducerConfig {
     @Bean
     public Producer<String, SpecificRecordBase> getProducer() {
         Properties config = new Properties();
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.producer.bootstrap-servers"));
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.bootstrap-servers"));
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, environment.getProperty("spring.kafka.producer.key-serializer"));
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                 environment.getProperty("spring.kafka.producer.value-serializer"));

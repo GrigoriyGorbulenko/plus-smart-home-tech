@@ -22,7 +22,7 @@ public class KafkaConsumerConfig {
         Properties config = new Properties();
         config.put(ConsumerConfig.CLIENT_ID_CONFIG, environment.getProperty("spring.kafka.consumer.client-id"));
         config.put(ConsumerConfig.GROUP_ID_CONFIG, environment.getProperty("spring.kafka.consumer.group-id"));
-        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.producer.bootstrap-servers"));
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.getProperty("spring.kafka.bootstrap-servers"));
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 environment.getProperty("spring.kafka.consumer.key-deserializer"));
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
