@@ -27,7 +27,7 @@ public class KafkaConsumerConfig {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 environment.getProperty("spring.kafka.consumer.key-deserializer"));
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                environment.getProperty("spring.kafka.consumer.value-hub-deserializer"));
+                environment.getProperty("spring.kafka.consumer.hub-deserializer"));
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
                 environment.getProperty("spring.kafka.consumer.enable-auto-commit"));
 
@@ -43,7 +43,7 @@ public class KafkaConsumerConfig {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
                 environment.getProperty("spring.kafka.consumer.key-deserializer"));
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                environment.getProperty("spring.kafka.consumer.value-snapshot-deserializer"));
+                environment.getProperty("spring.kafka.consumer.snapshot-deserializer"));
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,
                 environment.getProperty("spring.kafka.consumer.enable-auto-commit"));
 
