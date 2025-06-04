@@ -28,7 +28,7 @@ public class ErrorHandler {
     @ExceptionHandler({NoProductsInShoppingCartException.class,
             ProductInShoppingCartLowQuantityInWarehouseException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleNotFoundException(RuntimeException e) {
+    public ErrorResponse handleNotFoundException(final RuntimeException e) {
         return new ErrorResponse(
                 e.getCause(),
                 e.getStackTrace(),
@@ -42,7 +42,7 @@ public class ErrorHandler {
 
     @ExceptionHandler(FeignException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    public ErrorResponse handleFeignException(FeignException e) {
+    public ErrorResponse handleFeignException(final FeignException e) {
         return new ErrorResponse(
                 e.getCause(),
                 e.getStackTrace(),
