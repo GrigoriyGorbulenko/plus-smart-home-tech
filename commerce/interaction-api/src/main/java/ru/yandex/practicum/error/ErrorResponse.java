@@ -1,21 +1,22 @@
 package ru.yandex.practicum.error;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
 @Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ErrorResponse {
     Throwable cause;
-    List<StackTraceElement> stackTrace;
-    String httpStatus;
+    StackTraceElement[] stackTrace;
+    HttpStatus httpstatus;
     String userMessage;
     String message;
-    List<Throwable> suppressed;
+    Throwable[] suppressed;
     String localizedMessage;
 }
