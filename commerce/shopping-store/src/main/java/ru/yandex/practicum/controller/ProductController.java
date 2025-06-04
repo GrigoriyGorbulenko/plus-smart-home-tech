@@ -57,5 +57,4 @@ public class ProductController {
         log.info("Получение информации о товаре с id = {}", productId);
         return productService.getProductById(productId);
     }
-
 }

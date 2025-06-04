@@ -8,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
-
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Pageable {

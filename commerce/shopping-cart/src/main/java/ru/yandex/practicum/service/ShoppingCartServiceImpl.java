@@ -9,9 +9,10 @@ import ru.yandex.practicum.dto.shoppingcart.ChangeProductQuantityRequest;
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
 import ru.yandex.practicum.exception.NoProductsInShoppingCartException;
 import ru.yandex.practicum.exception.NotFoundShoppingCartException;
+import ru.yandex.practicum.exception.ProductInShoppingCartLowQuantityInWarehouseException;
+import ru.yandex.practicum.exception.ProductNotFoundInWarehouseException;
 import ru.yandex.practicum.feign.WarehouseClient;
-import ru.yandex.practicum.feign.exception.ProductInShoppingCartLowQuantityInWarehouseException;
-import ru.yandex.practicum.feign.exception.ProductNotFoundInWarehouseException;
+
 import ru.yandex.practicum.mapper.ShoppingCartMapper;
 import ru.yandex.practicum.model.ShoppingCart;
 import ru.yandex.practicum.model.ShoppingCartState;
@@ -88,7 +89,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         Map<UUID, Long> oldProducts = shoppingCart.getCartProducts();
 
         if (!productIds.stream().allMatch(oldProducts::containsKey)) {
-            throw new NoProductsInShoppingCartException("Таких продуктов нет в корзине");
+            throw new NoProductsInShoppingCartException("Продуктов нет в корзине");
         }
         Map<UUID, Long> newProducts = oldProducts.entrySet().stream()
                 .filter(c -> !productIds.contains(c.getKey()))
@@ -107,7 +108,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         Map<UUID, Long> products = shoppingCart.getCartProducts();
 
         if (!products.containsKey(request.getProductId())) {
-            throw new NoProductsInShoppingCartException("Такого продукта нет в корзине");
+            throw new NoProductsInShoppingCartException("Продукта нет в корзине");
         }
 
         products.put(request.getProductId(), request.getNewQuantity());
@@ -127,6 +128,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     private ShoppingCart getActiveCartOfUser(String username) {
         return shoppingCartRepository.findByUsernameAndState(username, ShoppingCartState.ACTIVE)
-                .orElseThrow(() -> new NotFoundShoppingCartException("У данного пользователя нет активной корзины"));
+                .orElseThrow(() -> new NotFoundShoppingCartException("Нет активной корзины"));
     }
 }

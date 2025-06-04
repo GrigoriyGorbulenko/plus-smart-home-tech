@@ -1,4 +1,4 @@
-package ru.yandex.practicum.feign.exception;
+package ru.yandex.practicum.exception;
 
 public class ProductNotFoundInWarehouseException extends RuntimeException {
     public ProductNotFoundInWarehouseException(String message) {

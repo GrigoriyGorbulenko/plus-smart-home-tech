@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.enums.QuantityState;
 
-
 import java.util.UUID;
 
 @Data

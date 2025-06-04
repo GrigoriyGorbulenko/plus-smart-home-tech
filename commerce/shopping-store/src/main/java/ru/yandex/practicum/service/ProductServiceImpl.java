@@ -1,11 +1,9 @@
 package ru.yandex.practicum.service;
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import org.springframework.data.domain.Pageable;
 import ru.yandex.practicum.dto.shoppingstore.ProductDto;
@@ -97,6 +95,6 @@ public class ProductServiceImpl implements ProductService {
 
     private Product checkProductById(UUID productId) {
         return productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Товар с id: " + productId + "  не найден"));
+                .orElseThrow(() -> new ProductNotFoundException("Товар не найден"));
     }
 }
