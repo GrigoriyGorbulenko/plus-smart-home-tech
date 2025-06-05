@@ -25,7 +25,7 @@ spring:
 
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/smart-home
+    url: jdbc:postgresql://localhost:5433/smart-home
     username: postgres
     password: password
 
