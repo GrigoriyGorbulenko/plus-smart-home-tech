@@ -2,10 +2,11 @@ package ru.yandex.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.data.domain.Pageable;
 import ru.yandex.practicum.dto.shoppingstore.ProductDto;
 import ru.yandex.practicum.dto.shoppingstore.SetProductQuantityStateRequest;
 import ru.yandex.practicum.enums.ProductCategory;
@@ -20,7 +21,6 @@ import ru.yandex.practicum.repository.ProductRepository;
 import java.util.*;
 
 
-
 @Slf4j
 @Service
 @Transactional(readOnly = true)
@@ -30,7 +30,11 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> getProductsByType(ProductCategory category, Pageable pageable) {
-        return ProductMapper.mapToProductDto(productRepository.findAllByProductCategory(category,pageable));
+
+        return productRepository.findAllByProductCategory(category, pageable)
+                .stream()
+                .map(ProductMapper::mapToProductDto)
+                .toList();
     }
 
     @Override
@@ -72,7 +76,12 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Boolean removeProduct(UUID productId) {
         Product product = checkProductById(productId);
-        productRepository.delete(product);
+        if (product.getProductState().equals(ProductState.DEACTIVATE)) {
+            return false;
+        }
+
+        product.setProductState(ProductState.DEACTIVATE);
+
         return true;
     }
 

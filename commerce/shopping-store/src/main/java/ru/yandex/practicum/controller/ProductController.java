@@ -1,13 +1,13 @@
 package ru.yandex.practicum.controller;
 
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.dto.shoppingstore.Pageable;
+import org.springframework.data.domain.Pageable;
 import ru.yandex.practicum.dto.shoppingstore.ProductDto;
 import ru.yandex.practicum.dto.shoppingstore.SetProductQuantityStateRequest;
 import ru.yandex.practicum.enums.ProductCategory;
@@ -24,10 +24,13 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public List<ProductDto> getProductsByType(@RequestParam ProductCategory category, @Valid Pageable pageableRequest) {
+    public List<ProductDto> getProductsByType(@RequestParam ProductCategory category,
+                                              @RequestParam(defaultValue = "0") Integer page,
+                                              @RequestParam(defaultValue = "10") Integer size,
+                                              @RequestParam(defaultValue = "productName") String sort) {
         log.info("Получение категории = {}", category);
-        PageRequest pageRequest = PageRequest.of(pageableRequest.getPage(), pageableRequest.getSize(), Sort.by(pageableRequest.getSort().toArray(new String[0])));
-        return productService.getProductsByType(category, pageRequest);
+        Pageable pageable = PageRequest.of(page, size, Sort.Direction.ASC, sort);
+        return productService.getProductsByType(category, pageable);
     }
 
     @PutMapping
