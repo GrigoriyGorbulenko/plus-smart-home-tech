@@ -19,11 +19,6 @@
         <module>telemetry</module>
         <module>infra</module>
         <module>commerce</module>
-        <module>telemetry/analyzer</module>
-        <module>telemetry/hub-router</module>
-        <module>commerce/shopping-cart</module>
-        <module>commerce/warehouse</module>
-        <module>commerce/interaction-api</module>
     </modules>
 
     <properties>
