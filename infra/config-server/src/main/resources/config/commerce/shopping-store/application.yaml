@@ -15,4 +15,4 @@ spring:
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://localhost:6432/shopping_store
     username: postgres
-    password: 52458
+    password: password

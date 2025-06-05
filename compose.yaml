@@ -5,9 +5,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=52458
+      - POSTGRES_PASSWORD=password
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=plus
+      - POSTGRES_DB=smart-home
 
   commerce-db:
     image: postgres:16.1
@@ -15,7 +15,7 @@ services:
     ports:
       - "6432:5432"
     environment:
-      - POSTGRES_PASSWORD=52458
+      - POSTGRES_PASSWORD=password
       - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
     healthcheck:
@@ -24,22 +24,23 @@ services:
       interval: 5s
       retries: 10
 
-    db-init:
-      image: postgres:16.1
-      container_name: db-init
-      depends_on:
-        commerce-db:
-          condition: service_healthy
-      entrypoint:
-        - bash
-        - -c
-        - |
-          set -e
-          psql postgresql://postgres:password@commerce-db:5432 -v ON_ERROR_STOP=1 <<-EOSQL
-          create database shopping_cart;
-          create database shopping_store;
-          create database warehouse;
-          EOSQL
+  db-init:
+    image: postgres:16.1
+    container_name: db-init
+    depends_on:
+      commerce-db:
+        condition: service_healthy
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e
+        psql postgresql://postgres:password@commerce-db:5432 -v ON_ERROR_STOP=1 <<-EOSQL
+        create database shopping_cart;
+        create database shopping_store;
+        create database warehouse;
+        EOSQL
+    
 
   kafka:
     image: confluentinc/confluent-local:7.4.3
