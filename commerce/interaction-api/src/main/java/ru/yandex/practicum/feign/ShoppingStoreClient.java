@@ -1,11 +1,10 @@
 package ru.yandex.practicum.feign;
 
-
 import feign.FeignException;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.dto.shoppingstore.ProductDto;
-import ru.yandex.practicum.enums.ProductCategory;
+import ru.yandex.practicum.enums.shopping_store.ProductCategory;
 import ru.yandex.practicum.enums.QuantityState;
 
 import java.util.List;

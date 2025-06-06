@@ -1,22 +1,18 @@
-package ru.yandex.practicum.dto.shoppingcart;
+package ru.yandex.practicum.dto.order;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
-
+import java.util.Map;
 import java.util.UUID;
 
 @Data
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ChangeProductQuantityRequest {
+public class ProductReturnRequest {
     @NotNull
-    UUID productId;
+    UUID orderId;
     @NotNull
-    @Min(value = 1)
-    Long newQuantity;
+    Map<UUID, Long> products;
 }
