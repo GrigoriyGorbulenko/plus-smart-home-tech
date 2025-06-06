@@ -10,17 +10,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.yandex.practicum.address.Address;
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
-import ru.yandex.practicum.dto.warehouse.AddProductToWarehouseRequest;
-import ru.yandex.practicum.dto.warehouse.AddressDto;
-import ru.yandex.practicum.dto.warehouse.BookedProductsDto;
-import ru.yandex.practicum.dto.warehouse.NewProductInWarehouseRequest;
+import ru.yandex.practicum.dto.warehouse.*;
 import ru.yandex.practicum.enums.QuantityState;
+import ru.yandex.practicum.exception.OrderBookingNotFoundException;
 import ru.yandex.practicum.exception.ProductInShoppingCartLowQuantityInWarehouseException;
 import ru.yandex.practicum.exception.ProductNotFoundInWarehouseException;
 import ru.yandex.practicum.exception.SpecifiedProductAlreadyInWarehouseException;
 import ru.yandex.practicum.feign.ShoppingStoreClient;
 import ru.yandex.practicum.mapper.WarehouseProductMapper;
+import ru.yandex.practicum.model.OrderBooking;
 import ru.yandex.practicum.model.WarehouseProduct;
+import ru.yandex.practicum.repository.OrderBookingRepository;
 import ru.yandex.practicum.repository.WarehouseRepository;
 
 import java.util.Collection;
@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class WarehouseServiceImpl implements WarehouseService {
+    private final OrderBookingRepository orderBookingRepository;
     private final WarehouseRepository warehouseRepository;
     private final ShoppingStoreClient storeClient;
 
@@ -50,8 +51,53 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     @Override
+    @Transactional
+    public void shippedToDelivery(ShippedToDeliveryRequest request) {
+        checkOrderBooking(request).setDeliveryId(request.getDeliveryId());
+    }
+
+    @Override
+    @Transactional
+    public void returnProducts(Map<UUID, Long> products) {
+        Map<UUID, WarehouseProduct> warehouseProducts = warehouseRepository.findAllById(products.keySet()).stream()
+                .collect(Collectors.toMap(WarehouseProduct::getProductId, Function.identity()));
+
+        products.forEach((key, value) -> {
+            if (!warehouseProducts.containsKey(key)) {
+                throw new ProductNotFoundInWarehouseException("Товара нет на складе");
+            }
+            warehouseProducts.get(key).setQuantity(warehouseProducts.get(key).getQuantity() + value);
+        });
+    }
+
+    @Override
     public BookedProductsDto checkProductsQuantity(ShoppingCartDto shoppingCartDto) {
-        return checkQuantity(shoppingCartDto);
+        Map<UUID, WarehouseProduct> warehouseProducts = warehouseRepository
+                .findAllById(shoppingCartDto.getProducts().keySet()).stream()
+                .collect(Collectors.toMap(WarehouseProduct::getProductId, Function.identity()));
+
+        return checkQuantity(shoppingCartDto.getProducts(), warehouseProducts);
+    }
+
+    @Override
+    @Transactional
+    public BookedProductsDto assemblyProductsForOrder(AssemblyProductsForOrderRequest assemblyRequest) {
+        Map<UUID, Long> assemblyProducts = assemblyRequest.getProducts();
+
+        Map<UUID, WarehouseProduct> warehouseProducts = warehouseRepository
+                .findAllById(assemblyProducts.keySet()).stream()
+                .collect(Collectors.toMap(WarehouseProduct::getProductId, Function.identity()));
+
+        BookedProductsDto bookedProducts = checkQuantity(assemblyProducts, warehouseProducts);
+
+        warehouseProducts.forEach((key, value) -> value.setQuantity(value.getQuantity() - assemblyProducts.get(key)));
+
+        orderBookingRepository.save(OrderBooking.builder()
+                .products(assemblyProducts)
+                .orderId(assemblyRequest.getOrderId())
+                .build());
+
+        return bookedProducts;
     }
 
     @Override
@@ -85,25 +131,22 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .build();
     }
 
-    private BookedProductsDto checkQuantity(ShoppingCartDto shoppingCartDto) {
-        Map<UUID, Long> cartProducts = shoppingCartDto.getProducts();
-        Set<UUID> cartProductIds = cartProducts.keySet();
-
-        Map<UUID, WarehouseProduct> warehouseProducts = warehouseRepository.findAllById(cartProductIds).stream()
-                .collect(Collectors.toMap(WarehouseProduct::getProductId, Function.identity()));
-
+    private BookedProductsDto checkQuantity(Map<UUID, Long> cartProducts,
+                                            Map<UUID, WarehouseProduct> warehouseProducts) {
         Set<UUID> productIds = warehouseProducts.keySet();
-        cartProductIds.forEach(id -> {
+        cartProducts.keySet().forEach(id -> {
             if (!productIds.contains(id)) {
                 throw new ProductNotFoundInWarehouseException("Товара нет на складе");
             }
         });
+        log.info("Товаров хватает на складе");
 
         cartProducts.forEach((key, value) -> {
             if (warehouseProducts.get(key).getQuantity() < value) {
                 throw new ProductInShoppingCartLowQuantityInWarehouseException("Товара не хватает на складе");
             }
         });
+        log.info("Товаров хватает на складе");
 
         return getBookedProducts(warehouseProducts.values(), cartProducts);
     }
@@ -144,5 +187,10 @@ public class WarehouseServiceImpl implements WarehouseService {
     private WarehouseProduct checkWarehouseProduct(AddProductToWarehouseRequest addProductQuantity) {
         return warehouseRepository.findById(addProductQuantity.getProductId())
                 .orElseThrow(() -> new ProductNotFoundInWarehouseException("Товара нет на складе"));
+    }
+
+    private OrderBooking checkOrderBooking(ShippedToDeliveryRequest  request) {
+        return orderBookingRepository.findById(request.getOrderId())
+                .orElseThrow(() -> new OrderBookingNotFoundException("Для заказа не найдено бронирование"));
     }
 }

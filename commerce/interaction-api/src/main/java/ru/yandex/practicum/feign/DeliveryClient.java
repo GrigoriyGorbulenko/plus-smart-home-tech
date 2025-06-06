@@ -16,13 +16,13 @@ public interface DeliveryClient {
     DeliveryDto addNewDelivery(@RequestBody DeliveryDto deliveryDto) throws FeignException;
 
     @PostMapping("/successful")
-    void changeDeliveryState(@RequestBody UUID deliveryId) throws FeignException;
+    void confirmDelivery(@RequestBody UUID deliveryId) throws FeignException;
 
     @PostMapping("/picked")
     void getProductsToDelivery(@RequestBody UUID deliveryId) throws FeignException;
 
     @PostMapping("/failed")
-    void changeDeliveryStateToFailed(@RequestBody UUID deliveryId) throws FeignException;
+    void failDelivery(@RequestBody UUID deliveryId) throws FeignException;
 
     @PostMapping("/cost")
     Double calculateTotalDeliveryCost(@RequestBody OrderDto orderDto) throws FeignException;
