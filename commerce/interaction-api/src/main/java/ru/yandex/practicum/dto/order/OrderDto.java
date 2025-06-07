@@ -19,7 +19,7 @@ public class OrderDto {
     UUID orderId;
     UUID shoppingCartId;
     @NotEmpty
-    Map<UUID, Integer> products;
+    Map<UUID, Long> products;
     UUID paymentId;
     UUID deliveryId;
     OrderState state;
