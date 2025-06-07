@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "delivery")
+@Table(name = "deliveries")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -22,11 +22,11 @@ public class Delivery {
     UUID deliveryId;
 
     @ManyToOne
-    @JoinColumn(name = "from_address_id")
+    @JoinColumn(name = "from_address")
     Address fromAddress;
 
     @ManyToOne
-    @JoinColumn(name = "to_address_id")
+    @JoinColumn(name = "to_address")
     Address toAddress;
 
     @Column(name = "order_id")

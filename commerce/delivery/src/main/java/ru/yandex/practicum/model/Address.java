@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "delivery_address")
+@Table(name = "addresses")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -17,7 +17,7 @@ import java.util.UUID;
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
+    @Column(name = "address_id")
     UUID addressId;
     String country;
     String city;

@@ -30,7 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final ShoppingStoreClient shoppingStoreClient;
     private final OrderClient orderClient;
-    public static final double TAX = 0.1;
+    private static final Double TAX = 0.1;
 
     @Override
     @Transactional
