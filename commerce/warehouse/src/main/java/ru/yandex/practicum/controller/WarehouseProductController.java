@@ -7,12 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import ru.yandex.practicum.dto.shoppingcart.ShoppingCartDto;
-import ru.yandex.practicum.dto.warehouse.AddProductToWarehouseRequest;
-import ru.yandex.practicum.dto.warehouse.AddressDto;
-import ru.yandex.practicum.dto.warehouse.BookedProductsDto;
-import ru.yandex.practicum.dto.warehouse.NewProductInWarehouseRequest;
+import ru.yandex.practicum.dto.warehouse.*;
 import ru.yandex.practicum.service.WarehouseService;
 
+import java.util.Map;
+import java.util.UUID;
 
 
 @Slf4j
@@ -28,15 +27,34 @@ public class WarehouseProductController {
         productService.addNewProduct(newProductRequest);
     }
 
+    @PostMapping("/shipped")
+    public void shippedToDelivery(@Valid @RequestBody ShippedToDeliveryRequest request) {
+        log.info("Передача заказа в доставку");
+        productService.shippedToDelivery(request);
+    }
+
+    @PostMapping("/return")
+    public void returnProducts(@RequestBody Map<UUID, Long> products) {
+        log.info("Возврат продуктов на склад");
+        productService.returnProducts(products);
+    }
+
     @PostMapping("/check")
     public BookedProductsDto checkProductsQuantity(@Valid @RequestBody ShoppingCartDto shoppingCartDto) {
         log.info("Проверка наличия товаров из корзины");
         return productService.checkProductsQuantity(shoppingCartDto);
     }
 
+    @PostMapping("/assembly")
+    public BookedProductsDto assemblyProductsForOrder(
+            @Valid @RequestBody AssemblyProductsForOrderRequest assemblyRequest) {
+        log.info("Сборка заказа");
+        return productService.assemblyProductsForOrder(assemblyRequest);
+    }
+
     @PostMapping("/add")
     public void addProductQuantity(@Valid @RequestBody AddProductToWarehouseRequest addProductQuantity) {
-        log.info("Добавление товара с id");
+        log.info("Добавление товара");
         productService.addProductQuantity(addProductQuantity);
     }
 

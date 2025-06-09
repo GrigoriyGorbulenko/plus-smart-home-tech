@@ -9,9 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ru.yandex.practicum.dto.shoppingstore.ProductDto;
 import ru.yandex.practicum.dto.shoppingstore.SetProductQuantityStateRequest;
-import ru.yandex.practicum.enums.ProductCategory;
+import ru.yandex.practicum.enums.shopping_store.ProductCategory;
 
-import ru.yandex.practicum.enums.ProductState;
+import ru.yandex.practicum.enums.shopping_store.ProductState;
 import ru.yandex.practicum.enums.QuantityState;
 import ru.yandex.practicum.exception.ProductNotFoundException;
 import ru.yandex.practicum.mapper.ProductMapper;

@@ -21,8 +21,11 @@ public class WarehouseProduct {
     Boolean fragile;
 
     Double width;
+
     Double height;
+
     Double depth;
+
     Double weight;
 
     Long quantity;
