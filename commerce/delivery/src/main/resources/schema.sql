@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS deliveries (
   to_address BIGINT REFERENCES addresses(address_id) ,
   order_id UUID NOT NULL,
   delivery_state VARCHAR(50),
-  delivery_weight NUMERIC(10, 2) NOT NULL,
-  delivery_volume NUMERIC(10, 2) NOT NULL,
+  delivery_weight DECIMAL NOT NULL,
+  delivery_volume DECIMAL NOT NULL,
   fragile BOOLEAN
 );

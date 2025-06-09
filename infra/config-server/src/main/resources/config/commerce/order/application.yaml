@@ -13,6 +13,6 @@ spring:
 
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6432/order
+    url: jdbc:postgresql://localhost:6432/orders
     username: postgres
     password: password

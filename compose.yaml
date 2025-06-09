@@ -44,7 +44,7 @@ services:
         create database shopping_cart;
         create database shopping_store;
         create database warehouse;
-        create database order;
+        create database orders;
         create database payment;
         create database delivery;
         EOSQL
