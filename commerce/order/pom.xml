@@ -61,7 +61,7 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>ru.yandex.practicum</groupId>
             <artifactId>interaction-api</artifactId>

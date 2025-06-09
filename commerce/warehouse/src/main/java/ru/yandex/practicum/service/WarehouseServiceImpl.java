@@ -23,10 +23,7 @@ import ru.yandex.practicum.model.WarehouseProduct;
 import ru.yandex.practicum.repository.OrderBookingRepository;
 import ru.yandex.practicum.repository.WarehouseRepository;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -154,7 +151,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     private BookedProductsDto getBookedProducts(Collection<WarehouseProduct> productList,
                                                 Map<UUID, Long> cartProducts) {
         return BookedProductsDto.builder()
-                .fragile(productList.stream().anyMatch(WarehouseProduct::getFragile))
                 .deliveryWeight(productList.stream()
                         .mapToDouble(p -> p.getWeight() * cartProducts.get(p.getProductId()))
                         .sum())
@@ -162,6 +158,7 @@ public class WarehouseServiceImpl implements WarehouseService {
                         .mapToDouble(p ->
                                 p.getWidth() * p.getHeight() * p.getDepth() * cartProducts.get(p.getProductId()))
                         .sum())
+                .fragile(productList.stream().anyMatch(WarehouseProduct::getFragile))
                 .build();
     }
 
@@ -189,7 +186,7 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .orElseThrow(() -> new ProductNotFoundInWarehouseException("Товара нет на складе"));
     }
 
-    private OrderBooking checkOrderBooking(ShippedToDeliveryRequest  request) {
+    private OrderBooking checkOrderBooking(ShippedToDeliveryRequest request) {
         return orderBookingRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new OrderBookingNotFoundException("Для заказа не найдено бронирование"));
     }
